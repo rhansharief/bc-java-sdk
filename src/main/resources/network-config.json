@@ -48,10 +48,10 @@
         "ca.example.com"
       ],
       "adminPrivateKey": {
-        "pem": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgsx2wjs7kkEIU57QA7Qj4OK+zjmu7pMPmogcH4/E5SrShRANCAATInvT1/EViSEHSE5mBUWRAIdBtmBqHwaFa7ZE8uxtvcHqjvrMFxqPh/8VFq1YKTwwoqKvY+zO2KJFe9dMrD6Bs\n-----END PRIVATE KEY-----"
+        "pem": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgsx2wjs7kkEIU57QA7Qj4OK+zjmu7pMPmogcH4/E5SrShRANCAATInvT1/EViSEHSE5mBUWRAIdBtmBqHwaFa7ZE8uxtvcHqjvrMFxqPh/8VFq1YKTwwoqKvY+zO2KJFe9dMrD6Bs\n-----END PRIVATE KEY-----" //crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore/
       },
       "signedCert": {
-        "path": "src/main/resources/Admin@org1.example.com-cert.pem"
+        "path": "src/main/resources/Admin@org1.example.com-cert.pem" //crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/signcerts/
       }
     },
     "Org2": {
@@ -85,7 +85,7 @@
         "hostnameOverride": "peer0.org1.example.com"
       },
       "tlsCACerts": {
-        "path": "src/main/resources/org1/server.crt"
+        "path": "src/main/resources/org1/server.crt" //crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/server.crt
       }
     },
     "peer0.org2.example.com": {
@@ -98,7 +98,7 @@
         "hostnameOverride": "peer0.org1.example.com"
       },
       "tlsCACerts": {
-        "path": "src/main/resources/org2/server.crt"
+        "path": "src/main/resources/org2/server.crt" //crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/server.crt"
       }
     }
   },
