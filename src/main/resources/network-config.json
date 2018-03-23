@@ -109,7 +109,7 @@
         "verify": true
       },
       "tlsCACerts": {
-        "path": "src/main/resources/ca.org1.example.com-cert.pem"
+        "path": "src/main/resources/ca.org1.example.com-cert.pem" //peerOrganizations/org1.example.com/ca/org1.example.com-cert.pem
       },
       "registrar": [
         {
