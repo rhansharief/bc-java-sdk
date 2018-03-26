@@ -25,7 +25,7 @@
           "ledgerQuery": true,
           "eventSource": true
         },
-        "peer0.org2.example.com": {
+        "peer1.org1.example.com": {
           "endorsingPeer": true,
           "chaincodeQuery": false,
           "ledgerQuery": true,
@@ -45,13 +45,13 @@
         "peer1.org1.example.com"
       ],
       "certificateAuthorities": [
-        "ca.example.com"
+        "ca.org1.example.com"
       ],
       "adminPrivateKey": {
-        "pem": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgsx2wjs7kkEIU57QA7Qj4OK+zjmu7pMPmogcH4/E5SrShRANCAATInvT1/EViSEHSE5mBUWRAIdBtmBqHwaFa7ZE8uxtvcHqjvrMFxqPh/8VFq1YKTwwoqKvY+zO2KJFe9dMrD6Bs\n-----END PRIVATE KEY-----" //crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore/
+        "pem": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgOsN7Pau4qnkAq7Ex5Ek+IvvnhM0KLlyoJ0QnfiI+7m2hRANCAAT14sz6iPLbQLw0mlTGoiWNPjgAklqmcvZDAGJQZrnnP7nn3WBVd4vfw0Ysvp+tCgmuAf2Vs0Aahmp95fTAVcYc\n-----END PRIVATE KEY-----"
       },
       "signedCert": {
-        "path": "src/main/resources/Admin@org1.example.com-cert.pem" //crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/signcerts/
+        "path": "src/main/resources/Admin@org1.example.com-cert.pem"
       }
     },
     "Org2": {
@@ -65,11 +65,14 @@
     "orderer.example.com": {
       "url": "grpcs://localhost:7050",
       "grpcOptions": {
+        "sslProvider": "openSSL",
         "ssl-target-name-override": "orderer.example.com",
-        "grpc-max-send-message-length": 15
+        "grpc-max-send-message-length": 15,
+        "negotiationType": "TLS",
+        "hostnameOverride": "orderer.example.com"
       },
       "tlsCACerts": {
-        "pem": "-----BEGIN CERTIFICATE----- <etc>"
+        "pem": "-----BEGIN CERTIFICATE-----\nMIICWTCCAgCgAwIBAgIRAJiiX25fVqq3A9ILbGYCZNgwCgYIKoZIzj0EAwIwbDELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBGcmFuY2lzY28xFDASBgNVBAoTC2V4YW1wbGUuY29tMRowGAYDVQQDExF0bHNjYS5leGFtcGxlLmNvbTAeFw0xODAzMjYwMjUxNDVaFw0yODAzMjMwMjUxNDVaMFgxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1TYW4gRnJhbmNpc2NvMRwwGgYDVQQDExNvcmRlcmVyLmV4YW1wbGUuY29tMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEZDPtymKN7ZwQOfO4UZABJWdUXk64YylE9hu/RCgC2mmy8qIUU6149CLndKD5USTYL+kIRUYU2RJ661+hwubtUKOBljCBkzAOBgNVHQ8BAf8EBAMCBaAwHQYDVR0lBBYwFAYIKwYBBQUHAwEGCCsGAQUFBwMCMAwGA1UdEwEB/wQCMAAwKwYDVR0jBCQwIoAgFmQlKDRDu9IZ+zKfu7XbDZuJiXb0N0y9DIAtfailbBQwJwYDVR0RBCAwHoITb3JkZXJlci5leGFtcGxlLmNvbYIHb3JkZXJlcjAKBggqhkjOPQQDAgNHADBEAiBl0oxT0vDHAi6h76Uqtd1amzSi/EzR+0E73rCEVV3TVgIgGRJKuerHEsC8Vmmjc7bFuLUlf14rhmcJBbkPKfnoxHI=\n-----END CERTIFICATE-----"
       }
     }
   },
@@ -85,31 +88,31 @@
         "hostnameOverride": "peer0.org1.example.com"
       },
       "tlsCACerts": {
-        "path": "src/main/resources/org1/server.crt" //crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/server.crt
+        "path": "src/main/resources/org1/server.crt"
       }
     },
-    "peer0.org2.example.com": {
+    "peer1.org1.example.com": {
       "url": "grpcs://localhost:8051",
       "eventUrl": "grpcs://localhost:8053",
       "grpcOptions": {
-        "ssl-target-name-override": "peer0.org2.example.com",
+        "ssl-target-name-override": "peer1.org1.example.com",
         "sslProvider": "openSSL",
         "negotiationType": "TLS",
-        "hostnameOverride": "peer0.org1.example.com"
+        "hostnameOverride": "peer1.org1.example.com"
       },
       "tlsCACerts": {
-        "path": "src/main/resources/org2/server.crt" //crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/server.crt"
+        "path": "src/main/resources/org2/server.crt"
       }
     }
   },
   "certificateAuthorities": {
-    "ca.example.com": {
+    "ca.org1.example.com": {
       "url": "https://localhost:7054",
       "httpOptions": {
         "verify": true
       },
       "tlsCACerts": {
-        "path": "src/main/resources/ca.org1.example.com-cert.pem" //peerOrganizations/org1.example.com/ca/org1.example.com-cert.pem
+        "path": "src/main/resources/ca.org1.example.com-cert.pem"
       },
       "registrar": [
         {
@@ -117,7 +120,7 @@
           "enrollSecret": "adminpw"
         }
       ],
-      "caName": "caNameHere"
+      "caName": "ca.org1.example.com"
     }
   }
 }

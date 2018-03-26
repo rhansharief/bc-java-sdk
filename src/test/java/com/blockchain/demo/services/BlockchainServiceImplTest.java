@@ -1,10 +1,16 @@
 package com.blockchain.demo.services;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,24 +18,36 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
+import org.hyperledger.fabric.sdk.BlockEvent;
+import org.hyperledger.fabric.sdk.Peer.PeerRole;
+
+import org.apache.commons.io.IOUtils;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.PEMWriter;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.hyperledger.fabric.sdk.ChaincodeID;
 import org.hyperledger.fabric.sdk.ChaincodeResponse;
 import org.hyperledger.fabric.sdk.Channel;
 import org.hyperledger.fabric.sdk.Enrollment;
 import org.hyperledger.fabric.sdk.HFClient;
 import org.hyperledger.fabric.sdk.NetworkConfig;
+import org.hyperledger.fabric.sdk.Peer;
 import org.hyperledger.fabric.sdk.ProposalResponse;
 import org.hyperledger.fabric.sdk.TransactionProposalRequest;
 import org.hyperledger.fabric.sdk.exception.ProposalException;
 import org.hyperledger.fabric.sdk.security.CryptoSuite;
 import org.hyperledger.fabric_ca.sdk.EnrollmentRequest;
 import org.hyperledger.fabric_ca.sdk.HFCAClient;
+import org.hyperledger.fabric_ca.sdk.RegistrationRequest;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.blockchain.demo.models.BlockchainEnrollment;
 import com.blockchain.demo.models.BlockchainUser;
 import com.blockchain.demo.models.Organization;
 
@@ -43,12 +61,28 @@ public class BlockchainServiceImplTest {
     @Test
     public void testInvoke() {
         try {
+            boolean runningFabricCATLS = true;
             File f = new File("src/main/resources/network-config.json");
             NetworkConfig config = NetworkConfig.fromJsonFile(f);
             Assert.assertNotNull(config);
 
             Organization organization = new Organization("Org1", "Org1MSP");
-            organization.setCALocation("http://localhost:7054");
+            organization.setCAName("ca.org1.example.com");
+            organization.setCALocation("https://localhost:7054");
+
+            if (runningFabricCATLS) {
+                String cert = "src/main/resources/ca.org1.example.com-cert.pem";
+                File cf = new File(cert);
+                if (!cf.exists() || !cf.isFile()) {
+                    throw new RuntimeException("TEST is missing cert file " + cf.getAbsolutePath());
+                }
+                Properties properties = new Properties();
+                properties.setProperty("pemFile", cf.getAbsolutePath());
+
+                properties.setProperty("allowAllHostNames", "true"); //testing environment only NOT FOR PRODUCTION!
+
+                organization.setCAProperties(properties);
+            }
 
             String caName = organization.getCAName(); //Try one of each name and no name.
             if (caName != null && !caName.isEmpty()) {
@@ -99,6 +133,7 @@ public class BlockchainServiceImplTest {
             admin.setMspId("Org1MSP");
 
             if (!admin.isEnrolled()) {  //Preregistered admin only needs to be enrolled with Fabric caClient.
+                admin.setEnrollmentSecret("adminpw");
                 admin.setEnrollment(ca.enroll(admin.getName(), "adminpw"));
                 admin.setMspId("Org1MSP");
             }
@@ -114,7 +149,6 @@ public class BlockchainServiceImplTest {
             roles.add("app");
             roles.add("user");
             user.setRoles(roles);
-
 //            if (!user.isRegistered()) {  // users need to be registered AND enrolled
 //                RegistrationRequest rr = new RegistrationRequest(user.getName(), "org1.department1");
 //                user.setEnrollmentSecret(ca.register(rr, admin));
@@ -122,22 +156,49 @@ public class BlockchainServiceImplTest {
 //                System.out.println(user.getEnrollmentSecret());
 //            }
             if (!user.isEnrolled()) {
-                user.setEnrollment(ca.enroll(user.getName(), "AjORTwUVNCFF"));
+//                final EnrollmentRequest enrollmentRequestTLS = new EnrollmentRequest();
+//                enrollmentRequestTLS.addHost("localhost");
+//                enrollmentRequestTLS.setProfile("tls");
+                user.setEnrollment(ca.enroll(user.getName(), "qRpDupryRaPo"));
+//                user.setEnrollment(ca.enroll(user.getName(), user.getEnrollmentSecret()));
             }
+
 
             System.out.println(user);
             Assert.assertNotNull(user);
             Assert.assertNotNull(user.getEnrollment());
 
+
+
+            BlockchainUser peerAdmin = new BlockchainUser();
+            peerAdmin.setName("Org1Admin");
+            peerAdmin.setAffiliation("org1.department1");
+            peerAdmin.setAccount("Org1Admin");
+            peerAdmin.setMspId("Org1MSP");
+            peerAdmin.setRoles(roles);
+
+            File skFile = new File("src/main/resources/614f4a0daaa9af87d0c3e0642b9f7265dd0a9d29f030f22529e19bda2a5b708c_sk");
+            File pemFile = new File("src/main/resources/Admin@org1.example.com-cert.pem");
+
+            String certificate = new String(IOUtils.toByteArray(new FileInputStream(pemFile)), "UTF-8");
+
+            PrivateKey privateKey = getPrivateKeyFromBytes(IOUtils.toByteArray(new FileInputStream(skFile)));
+
+            BlockchainEnrollment blockchainEnrollment = new BlockchainEnrollment(privateKey, certificate);
+            peerAdmin.setEnrollment(blockchainEnrollment);
+
             HFClient client = HFClient.createNewInstance();
 
             client.setCryptoSuite(CryptoSuite.Factory.getCryptoSuite());
 
-            client.setUserContext(user);
+            client.setUserContext(peerAdmin);
 
             Channel channel = client.loadChannelFromConfig("nimble-trx-channel", config);
             Assert.assertNotNull(channel);
             System.out.println(channel);
+            channel.getPeers().stream().forEach(peer -> {
+                channel.getPeersOptions(peer).setPeerRoles(PeerRole.NO_EVENT_SOURCE);
+            });
 
             channel.initialize();
 
@@ -159,8 +220,8 @@ public class BlockchainServiceImplTest {
                 /// Send transaction proposal to all peers
                 TransactionProposalRequest transactionProposalRequest = client.newTransactionProposalRequest();
                 transactionProposalRequest.setChaincodeID(chaincodeID);
-                transactionProposalRequest.setFcn("move");
-                transactionProposalRequest.setArgs(new String[] {});
+                transactionProposalRequest.setFcn("createAsset");
+                transactionProposalRequest.setArgs(new String[] {"{\"Id\":2, \"Name\":\"Asset2\"}"});
 //                transactionProposalRequest.setProposalWaitTime(testConfig.getProposalWaitTime());
                 if (user != null) { // specific user use that
                     transactionProposalRequest.setUserContext(user);
@@ -192,9 +253,12 @@ public class BlockchainServiceImplTest {
                 // Send transaction to orderer
                 System.out.printf("Sending chaincode transaction(move a,b,%s) to orderer.", 300);
                 if (user != null) {
-                    Assert.assertNotNull(channel.sendTransaction(successful, user));
+                    CompletableFuture<BlockEvent.TransactionEvent> test = channel.sendTransaction(successful, user);
+                    Assert.assertNotNull(test);
+                } else {
+                    Assert.assertNotNull(channel.sendTransaction(successful));
                 }
-                Assert.assertNotNull(channel.sendTransaction(successful));
+
             } catch (Exception e) {
 
                 throw new CompletionException(e);
@@ -224,4 +288,16 @@ public class BlockchainServiceImplTest {
         return pemStrWriter.toString();
     }
 
+    static PrivateKey getPrivateKeyFromBytes(byte[] data) throws IOException, NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException {
+        final Reader pemReader = new StringReader(new String(data));
+
+        final PrivateKeyInfo pemPair;
+        try (PEMParser pemParser = new PEMParser(pemReader)) {
+            pemPair = (PrivateKeyInfo) pemParser.readObject();
+        }
+
+        PrivateKey privateKey = new JcaPEMKeyConverter().setProvider(BouncyCastleProvider.PROVIDER_NAME).getPrivateKey(pemPair);
+
+        return privateKey;
+    }
 }
