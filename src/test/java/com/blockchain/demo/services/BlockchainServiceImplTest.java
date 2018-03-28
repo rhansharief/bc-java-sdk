@@ -36,7 +36,6 @@ import org.hyperledger.fabric.sdk.Channel;
 import org.hyperledger.fabric.sdk.Enrollment;
 import org.hyperledger.fabric.sdk.HFClient;
 import org.hyperledger.fabric.sdk.NetworkConfig;
-import org.hyperledger.fabric.sdk.Peer;
 import org.hyperledger.fabric.sdk.ProposalResponse;
 import org.hyperledger.fabric.sdk.TransactionProposalRequest;
 import org.hyperledger.fabric.sdk.exception.ProposalException;
@@ -56,7 +55,6 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class BlockchainServiceImplTest {
-    Map<String, Properties> clientTLSProperties = new HashMap<>();
 
     @Test
     public void testInvoke() {
@@ -71,7 +69,7 @@ public class BlockchainServiceImplTest {
             organization.setCALocation("https://localhost:7054");
 
             if (runningFabricCATLS) {
-                String cert = "src/main/resources/ca.org1.example.com-cert.pem";
+                String cert = "src/main/resources/fabric/crypto-config/peerOrganizations/org1.example.com/ca/ca.org1.example.com-cert.pem";
                 File cf = new File(cert);
                 if (!cf.exists() || !cf.isFile()) {
                     throw new RuntimeException("TEST is missing cert file " + cf.getAbsolutePath());
@@ -107,36 +105,22 @@ public class BlockchainServiceImplTest {
             HFCAClient ca = organization.getCAClient();
             ca.setCryptoSuite(CryptoSuite.Factory.getCryptoSuite());
 
-            if (isRunningFabricTls) {
-                //This shows how to get a client TLS certificate from Fabric CA
-                // we will use one client TLS certificate for orderer peers etc.
-                final EnrollmentRequest enrollmentRequestTLS = new EnrollmentRequest();
-                enrollmentRequestTLS.addHost("localhost");
-                enrollmentRequestTLS.setProfile("tls");
-                final Enrollment enroll = ca.enroll("admin", "adminpw", enrollmentRequestTLS);
-                final String tlsCertPEM = enroll.getCert();
-                final String tlsKeyPEM = getPEMStringFromPrivateKey(enroll.getKey());
-
-                final Properties tlsProperties = new Properties();
-
-                tlsProperties.put("clientKeyBytes", tlsKeyPEM.getBytes(UTF_8));
-                tlsProperties.put("clientCertBytes", tlsCertPEM.getBytes(UTF_8));
-                clientTLSProperties.put(organization.getName(), tlsProperties);
-                //Save in samplestore for follow on tests.
-//            sampleStore.storeClientPEMTLCertificate(organization, tlsCertPEM);
-//            sampleStore.storeClientPEMTLSKey(organization, tlsKeyPEM);
-            }
-
             //No need to register admin. Only need to enroll
             BlockchainUser admin = new BlockchainUser();
             admin.setName("admin");
             admin.setMspId("Org1MSP");
+            admin.setEnrollmentSecret("adminpw");
 
-            if (!admin.isEnrolled()) {  //Preregistered admin only needs to be enrolled with Fabric caClient.
-                admin.setEnrollmentSecret("adminpw");
+            if (isRunningFabricTls) {
+                final EnrollmentRequest enrollmentRequestTLS = new EnrollmentRequest();
+                enrollmentRequestTLS.addHost("localhost");
+                enrollmentRequestTLS.setProfile("tls");
+                admin.setEnrollment(ca.enroll(admin.getName(), admin.getEnrollmentSecret(), enrollmentRequestTLS));
+            } else {
                 admin.setEnrollment(ca.enroll(admin.getName(), "adminpw"));
-                admin.setMspId("Org1MSP");
             }
+
+
 
             BlockchainUser user = new BlockchainUser();
             user.setName("user");
@@ -152,19 +136,16 @@ public class BlockchainServiceImplTest {
 //            if (!user.isRegistered()) {  // users need to be registered AND enrolled
 //                RegistrationRequest rr = new RegistrationRequest(user.getName(), "org1.department1");
 //                user.setEnrollmentSecret(ca.register(rr, admin));
-//                System.out.println("ENROLLMENT SECRET");
 //                System.out.println(user.getEnrollmentSecret());
 //            }
             if (!user.isEnrolled()) {
                 final EnrollmentRequest enrollmentRequestTLS = new EnrollmentRequest();
                 enrollmentRequestTLS.addHost("localhost");
                 enrollmentRequestTLS.setProfile("tls");
-                user.setEnrollment(ca.enroll(user.getName(), "bhhjSpPKgxXM"));
 //                user.setEnrollment(ca.enroll(user.getName(), user.getEnrollmentSecret()));
+                user.setEnrollment(ca.enroll(user.getName(), "vyWXYBVojRkE"));
             }
 
-
-            System.out.println(user);
             Assert.assertNotNull(user);
             Assert.assertNotNull(user.getEnrollment());
 
@@ -177,8 +158,8 @@ public class BlockchainServiceImplTest {
             peerAdmin.setMspId("Org1MSP");
             peerAdmin.setRoles(roles);
 
-            File skFile = new File("src/main/resources/5bea1099bd302e3aa3d230cd8c541da1416262d6953156ac601f69d2cdea1ef7_sk");
-            File pemFile = new File("src/main/resources/Admin@org1.example.com-cert.pem");
+            File skFile = new File("src/main/resources/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore/d995716cc2f437f516add28831e01a9d89ce7ef778b9b1df61c3c85740af1cae_sk");
+            File pemFile = new File("src/main/resources/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/signcerts/Admin@org1.example.com-cert.pem");
 
             String certificate = new String(IOUtils.toByteArray(new FileInputStream(pemFile)), "UTF-8");
 
@@ -193,12 +174,8 @@ public class BlockchainServiceImplTest {
 
             client.setUserContext(peerAdmin);
 
-            Channel channel = client.loadChannelFromConfig("nimble-trx-channel", config);
+            Channel channel = client.loadChannelFromConfig("mychannel", config);
             Assert.assertNotNull(channel);
-            System.out.println(channel);
-            channel.getPeers().stream().forEach(peer -> {
-                channel.getPeersOptions(peer).setPeerRoles(PeerRole.NO_EVENT_SOURCE);
-            });
 
             channel.initialize();
 
@@ -220,8 +197,8 @@ public class BlockchainServiceImplTest {
                 /// Send transaction proposal to all peers
                 TransactionProposalRequest transactionProposalRequest = client.newTransactionProposalRequest();
                 transactionProposalRequest.setChaincodeID(chaincodeID);
-                transactionProposalRequest.setFcn("createAsset");
-                transactionProposalRequest.setArgs(new String[] {"{\"Id\":2, \"Name\":\"Asset2\"}"});
+                transactionProposalRequest.setFcn("invoke");
+                transactionProposalRequest.setArgs(new String[] {"a", "b", "5"});
 //                transactionProposalRequest.setProposalWaitTime(testConfig.getProposalWaitTime());
                 if (user != null) { // specific user use that
                     transactionProposalRequest.setUserContext(user);

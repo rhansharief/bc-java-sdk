@@ -14,7 +14,7 @@
     }
   },
   "channels": {
-    "nimble-trx-channel": {
+    "mychannel": {
       "orderers": [
         "orderer.example.com"
       ],
@@ -48,10 +48,10 @@
         "ca.org1.example.com"
       ],
       "adminPrivateKey": {
-        "pem": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfx8NyMeQ5QQaR1rQ4hEENnS8/FKvL33Cnxlx3hUbLYqhRANCAAT3PXK44ZwKuAMIF4dDyvHDRUVan2mjfhhU2ACoxSgVAWOROCNWaJbIGVTaf/TBEmSgXKSv7EigfkZyr8V5OPYS\n-----END PRIVATE KEY-----"
+        "pem": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgIg+97Oi/sOl0j4pPUl6DL6o9btw7Yw5m+h4nb7TJXoWhRANCAATXJZOPgscpCnborj/T5KNnn0K5U8ZcuFi33WgsPvnYY29LB33RXC+YJUnFNYm2oxpYu8Gj5FqYkOQ4/BCy84QT\n-----END PRIVATE KEY-----"
       },
       "signedCert": {
-        "path": "src/main/resources/Admin@org1.example.com-cert.pem"
+        "path": "src/main/resources/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/signcerts/Admin@org1.example.com-cert.pem"
       }
     },
     "Org2": {
@@ -72,7 +72,7 @@
         "hostnameOverride": "orderer.example.com"
       },
       "tlsCACerts": {
-        "pem": "-----BEGIN CERTIFICATE-----\nMIICNTCCAdygAwIBAgIRANhqbBFRYrUuXwawKnd1yFkwCgYIKoZIzj0EAwIwbDELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBGcmFuY2lzY28xFDASBgNVBAoTC2V4YW1wbGUuY29tMRowGAYDVQQDExF0bHNjYS5leGFtcGxlLmNvbTAeFw0xODAzMjgwMjUxMjBaFw0yODAzMjUwMjUxMjBaMGwxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1TYW4gRnJhbmNpc2NvMRQwEgYDVQQKEwtleGFtcGxlLmNvbTEaMBgGA1UEAxMRdGxzY2EuZXhhbXBsZS5jb20wWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASjHzYhlHjtFxmS3MV+EO5rkmfS+ijauJeYR+bkk7PJAztnazFjMCfjAJ91VcWhaUxR+4qEWF/eFgNrY/CmpvB8o18wXTAOBgNVHQ8BAf8EBAMCAaYwDwYDVR0lBAgwBgYEVR0lADAPBgNVHRMBAf8EBTADAQH/MCkGA1UdDgQiBCDEpVNMmLOmuXpitXWdZoz6X+t2ZdOXkBhPPnmWUKWzQTAKBggqhkjOPQQDAgNHADBEAiAJk3qzHMiPhcqQc5F7/cE9eslNh7Fp/g5F3nlBYUHzUQIgCNUDTpwlWAnMbjqP+qQxmRCrLmwnMUyp7h8RDicDkLA=\n-----END CERTIFICATE-----"
+        "pem": "-----BEGIN CERTIFICATE-----\nMIICNTCCAdygAwIBAgIRAIJs89ekVenmLgl1s2IbD4swCgYIKoZIzj0EAwIwbDELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBGcmFuY2lzY28xFDASBgNVBAoTC2V4YW1wbGUuY29tMRowGAYDVQQDExF0bHNjYS5leGFtcGxlLmNvbTAeFw0xODAzMjgxMDIyMzRaFw0yODAzMjUxMDIyMzRaMGwxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1TYW4gRnJhbmNpc2NvMRQwEgYDVQQKEwtleGFtcGxlLmNvbTEaMBgGA1UEAxMRdGxzY2EuZXhhbXBsZS5jb20wWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAATsyTRoT0s47lkZTjc8tHMqVx53hvkB+6eYXJJ2iD8ZRBx9nTNhX8xYRxkwjPrQt4LQIkqY3T+wX+OfRCZEFN/2o18wXTAOBgNVHQ8BAf8EBAMCAaYwDwYDVR0lBAgwBgYEVR0lADAPBgNVHRMBAf8EBTADAQH/MCkGA1UdDgQiBCCKAVvljCguZMGgArwJZYUNc8l1HTS76aw3FqlcCBqOhzAKBggqhkjOPQQDAgNHADBEAiAGRYMbNJqX7wWZO2ZfJDmfBV+k96ddVy9bsGA77iJS5QIgZsc6cOKnZyJU98hsDQIDyCqYVJbKyxlcVSESkp8NEV8=\n-----END CERTIFICATE-----"
       }
     }
   },
@@ -88,7 +88,7 @@
         "hostnameOverride": "peer0.org1.example.com"
       },
       "tlsCACerts": {
-        "path": "src/main/resources/org1/server.crt"
+        "path": "src/main/resources/fabric/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/server.crt"
       }
     },
     "peer1.org1.example.com": {
@@ -101,7 +101,7 @@
         "hostnameOverride": "peer1.org1.example.com"
       },
       "tlsCACerts": {
-        "path": "src/main/resources/org2/server.crt"
+        "path": "src/main/resources/fabric/crypto-config/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls/server.crt"
       }
     }
   },
@@ -112,7 +112,7 @@
         "verify": true
       },
       "tlsCACerts": {
-        "path": "src/main/resources/ca.org1.example.com-cert.pem"
+        "path": "src/main/resources/fabric/crypto-config/peerOrganizations/org1.example.com/ca/ca.org1.example.com-cert.pem"
       },
       "registrar": [
         {
