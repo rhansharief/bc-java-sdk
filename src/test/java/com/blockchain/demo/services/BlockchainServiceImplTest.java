@@ -156,10 +156,10 @@ public class BlockchainServiceImplTest {
 //                System.out.println(user.getEnrollmentSecret());
 //            }
             if (!user.isEnrolled()) {
-//                final EnrollmentRequest enrollmentRequestTLS = new EnrollmentRequest();
-//                enrollmentRequestTLS.addHost("localhost");
-//                enrollmentRequestTLS.setProfile("tls");
-                user.setEnrollment(ca.enroll(user.getName(), "qRpDupryRaPo"));
+                final EnrollmentRequest enrollmentRequestTLS = new EnrollmentRequest();
+                enrollmentRequestTLS.addHost("localhost");
+                enrollmentRequestTLS.setProfile("tls");
+                user.setEnrollment(ca.enroll(user.getName(), "bhhjSpPKgxXM"));
 //                user.setEnrollment(ca.enroll(user.getName(), user.getEnrollmentSecret()));
             }
 
@@ -177,7 +177,7 @@ public class BlockchainServiceImplTest {
             peerAdmin.setMspId("Org1MSP");
             peerAdmin.setRoles(roles);
 
-            File skFile = new File("src/main/resources/614f4a0daaa9af87d0c3e0642b9f7265dd0a9d29f030f22529e19bda2a5b708c_sk");
+            File skFile = new File("src/main/resources/5bea1099bd302e3aa3d230cd8c541da1416262d6953156ac601f69d2cdea1ef7_sk");
             File pemFile = new File("src/main/resources/Admin@org1.example.com-cert.pem");
 
             String certificate = new String(IOUtils.toByteArray(new FileInputStream(pemFile)), "UTF-8");
@@ -253,12 +253,9 @@ public class BlockchainServiceImplTest {
                 // Send transaction to orderer
                 System.out.printf("Sending chaincode transaction(move a,b,%s) to orderer.", 300);
                 if (user != null) {
-                    CompletableFuture<BlockEvent.TransactionEvent> test = channel.sendTransaction(successful, user);
-                    Assert.assertNotNull(test);
-                } else {
-                    Assert.assertNotNull(channel.sendTransaction(successful));
+                    CompletableFuture<BlockEvent.TransactionEvent> responses = channel.sendTransaction(successful, user);
+                    Assert.assertNotNull(responses);
                 }
-
             } catch (Exception e) {
 
                 throw new CompletionException(e);
