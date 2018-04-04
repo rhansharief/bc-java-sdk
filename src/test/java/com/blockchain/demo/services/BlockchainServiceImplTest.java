@@ -133,17 +133,17 @@ public class BlockchainServiceImplTest {
             roles.add("app");
             roles.add("user");
             user.setRoles(roles);
-//            if (!user.isRegistered()) {  // users need to be registered AND enrolled
-//                RegistrationRequest rr = new RegistrationRequest(user.getName(), "org1.department1");
-//                user.setEnrollmentSecret(ca.register(rr, admin));
-//                System.out.println(user.getEnrollmentSecret());
-//            }
+            if (!user.isRegistered()) {  // users need to be registered AND enrolled
+                RegistrationRequest rr = new RegistrationRequest(user.getName(), "org1.department1");
+                user.setEnrollmentSecret(ca.register(rr, admin));
+                System.out.println(user.getEnrollmentSecret());
+            }
             if (!user.isEnrolled()) {
                 final EnrollmentRequest enrollmentRequestTLS = new EnrollmentRequest();
                 enrollmentRequestTLS.addHost("localhost");
                 enrollmentRequestTLS.setProfile("tls");
-//                user.setEnrollment(ca.enroll(user.getName(), user.getEnrollmentSecret()));
-                user.setEnrollment(ca.enroll(user.getName(), "vyWXYBVojRkE"));
+                user.setEnrollment(ca.enroll(user.getName(), user.getEnrollmentSecret()));
+//                user.setEnrollment(ca.enroll(user.getName(), "vyWXYBVojRkE"));
             }
 
             Assert.assertNotNull(user);
