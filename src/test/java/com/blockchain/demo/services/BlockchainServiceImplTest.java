@@ -37,6 +37,7 @@ import org.hyperledger.fabric.sdk.Enrollment;
 import org.hyperledger.fabric.sdk.HFClient;
 import org.hyperledger.fabric.sdk.NetworkConfig;
 import org.hyperledger.fabric.sdk.ProposalResponse;
+import org.hyperledger.fabric.sdk.QueryByChaincodeRequest;
 import org.hyperledger.fabric.sdk.TransactionProposalRequest;
 import org.hyperledger.fabric.sdk.exception.ProposalException;
 import org.hyperledger.fabric.sdk.security.CryptoSuite;
@@ -53,6 +54,9 @@ import com.blockchain.demo.models.Organization;
 
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class BlockchainServiceImplTest {
 
@@ -133,17 +137,17 @@ public class BlockchainServiceImplTest {
             roles.add("app");
             roles.add("user");
             user.setRoles(roles);
-            if (!user.isRegistered()) {  // users need to be registered AND enrolled
-                RegistrationRequest rr = new RegistrationRequest(user.getName(), "org1.department1");
-                user.setEnrollmentSecret(ca.register(rr, admin));
-                System.out.println(user.getEnrollmentSecret());
-            }
+//            if (!user.isRegistered()) {  // users need to be registered AND enrolled
+//                RegistrationRequest rr = new RegistrationRequest(user.getName(), "org1.department1");
+//                user.setEnrollmentSecret(ca.register(rr, admin));
+//                System.out.println(user.getEnrollmentSecret());
+//            }
             if (!user.isEnrolled()) {
                 final EnrollmentRequest enrollmentRequestTLS = new EnrollmentRequest();
                 enrollmentRequestTLS.addHost("localhost");
                 enrollmentRequestTLS.setProfile("tls");
-                user.setEnrollment(ca.enroll(user.getName(), user.getEnrollmentSecret()));
-//                user.setEnrollment(ca.enroll(user.getName(), "vyWXYBVojRkE"));
+//                user.setEnrollment(ca.enroll(user.getName(), user.getEnrollmentSecret()));
+                user.setEnrollment(ca.enroll(user.getName(), "sCNiPnUSOaYl"));
             }
 
             Assert.assertNotNull(user);
@@ -188,6 +192,7 @@ public class BlockchainServiceImplTest {
                 .setVersion(CHAIN_CODE_VERSION_11)
                 .build();
 
+            queryChaincodeForExpectedValue(client, channel, chaincodeID);
             //invoke
             try {
                 Collection<ProposalResponse> successful = new LinkedList<>();
@@ -197,8 +202,8 @@ public class BlockchainServiceImplTest {
                 /// Send transaction proposal to all peers
                 TransactionProposalRequest transactionProposalRequest = client.newTransactionProposalRequest();
                 transactionProposalRequest.setChaincodeID(chaincodeID);
-                transactionProposalRequest.setFcn("invoke");
-                transactionProposalRequest.setArgs(new String[] {"a", "b", "5"});
+                transactionProposalRequest.setFcn("createAsset");
+                transactionProposalRequest.setArgs(new String[] {"{\"Id\":2, \"Name\":\"Asset2\"}"});
 //                transactionProposalRequest.setProposalWaitTime(testConfig.getProposalWaitTime());
                 if (user != null) { // specific user use that
                     transactionProposalRequest.setUserContext(user);
@@ -231,7 +236,9 @@ public class BlockchainServiceImplTest {
                 System.out.printf("Sending chaincode transaction(move a,b,%s) to orderer.", 300);
                 if (user != null) {
                     CompletableFuture<BlockEvent.TransactionEvent> responses = channel.sendTransaction(successful, user);
+                    BlockEvent.TransactionEvent response = responses.get();
                     Assert.assertNotNull(responses);
+                    Assert.assertNotNull(response);
                 }
             } catch (Exception e) {
 
@@ -249,6 +256,36 @@ public class BlockchainServiceImplTest {
             e.printStackTrace();
         }
 
+    }
+
+    private void queryChaincodeForExpectedValue(HFClient client, Channel channel, ChaincodeID chaincodeID) {
+
+        System.out.printf("Now query chaincode %s on channel %s for the value of b expecting to see", chaincodeID, channel.getName());
+        QueryByChaincodeRequest queryByChaincodeRequest = client.newQueryProposalRequest();
+        queryByChaincodeRequest.setArgs("b".getBytes(UTF_8)); // test using bytes as args. End2end uses Strings.
+        queryByChaincodeRequest.setFcn("listAssets");
+        queryByChaincodeRequest.setChaincodeID(chaincodeID);
+
+        Collection<ProposalResponse> queryProposals;
+
+        try {
+            queryProposals = channel.queryByChaincode(queryByChaincodeRequest);
+        } catch (Exception e) {
+            throw new CompletionException(e);
+        }
+
+        for (ProposalResponse proposalResponse : queryProposals) {
+            if (!proposalResponse.isVerified() || proposalResponse.getStatus() != ChaincodeResponse.Status.SUCCESS) {
+                fail("Failed query proposal from peer " + proposalResponse.getPeer().getName() + " status: " + proposalResponse.getStatus() +
+                    ". Messages: " + proposalResponse.getMessage()
+                    + ". Was verified : " + proposalResponse.isVerified());
+            } else {
+                String payload = proposalResponse.getProposalResponse().getResponse().getPayload().toStringUtf8().replaceAll("\"Record\": ", "");
+                System.out.printf("Query payload of b from peer %s returned %s", proposalResponse.getPeer().getName(), payload);
+                assertEquals(format("Failed compare on channel %s chaincode id %s expected value:', but got:'%s'",
+                    channel.getName(), chaincodeID, payload), payload);
+            }
+        }
     }
 
     private String getPEMStringFromPrivateKey(PrivateKey privateKey) throws IOException {
